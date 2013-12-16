@@ -6,29 +6,30 @@
  * @author Sidney Liebrand <sidney@dexonlineservices.nl>
  * @version 1.0.0
  *
+ * This class initiates itself, all you have to do is call it's methods e.g. Client::$Browser->Name e.t.c.'
+ * 
  */
 
 	class Client {
-		//Alle gegevens van de browser die mogelijk zijn (behalve cookies die aan / uit staan);
+		
 		public static $Browser = null;
-		//Returnt object met daarin properties / objecten met de data.
-		//e.g. Client::$System->OS returnt bijv 'Windows'
+		
 		public static $System = null;
-		//benchmark voor de class, deze functionaliteit staat standaard aan voor memtests etc.
+		//Benchmarking for the class, shows microtime and memory in bytes for preformance optimalisation.
 		public static $Execution = null;
-		//Wannabe IE browser mode.
+		
 		protected static $Compatibility = 0;
-		//Gematchte browser names komen hier(meerdere matches);
+		//Multiple matches will be in the array below, first will be the browser name, everything after will be an altName
 		protected static $nameMatches = array();
-		//Hier kunnen arrays toegevoegd worden om daarbij nieuwe browsers te laten identificeren via de useragent string.
+		//Arrays with browsers can be added here according to the UA string, this is useful if you want to expand the list of browsers.
 		protected static $browsers = array(
-			'Opera' => array( //Browser patterns / definities.
-				'name' => '/(OPR)|(Opera)/i', //Regex patroon om naam browser te checken, eventueel alternatieve browsers kunnen ingevoerd worden
-				'version' => '/(\sOPR\/([0-9\.]+))|(\sVersion\/([0-9\.]+))|(\sOpera\/([0-9\.]+))|(\sOpera\s([0-9\.]+))/i', //Patroon om versie van browser te achterhalen.
-				'mobile' => '/mobi|mini/i',
-				'engine' => array( //Engine patterns / definities.
-					'name' => '/(\sGecko)|((\s|)Presto)|(\sAppleWebKit)/i', //Patroon om browser engine op te halen.
-					'version' => '/(\sAppleWebKit\/([0-9\.]+)\s)|(\srv:([0-9\.]+))|((\s|)Presto\/([0-9\.]+)\s)/i'  //Patroon om engine versie op te halen.
+			'Opera' => array( //Browser patterns / definitions.
+				'name' => '/(OPR)|(Opera)/i', //Regex to check browser name.
+				'version' => '/(\sOPR\/([0-9\.]+))|(\sVersion\/([0-9\.]+))|(\sOpera\/([0-9\.]+))|(\sOpera\s([0-9\.]+))/i', //Regex pattern to determine the browsers version.
+				'mobile' => '/mobi|mini/i', //Patterns to check if this has a mobile version, fill in null if there is no mobile browser.
+				'engine' => array( //Engine patterns / definitions.
+					'name' => '/(\sGecko)|((\s|)Presto)|(\sAppleWebKit)/i', //Regex to check which engine the browser is using.
+					'version' => '/(\sAppleWebKit\/([0-9\.]+)\s)|(\srv:([0-9\.]+))|((\s|)Presto\/([0-9\.]+)\s)/i'  //Engine version regex.
 				)
 			),
 			'Msie' => array(
@@ -36,7 +37,7 @@
 				'version' => '/(\s|)MSIE\s([0-9\.b]+)|\srv:([0-9\.]+)/',
 				'mobile' => '/IEMobile/',
 				'engine' => array(
-					'name' => '=Trident', //Als de browser engine bekend is, hoeft hier geen regex voor uitgevoerd te worden -> gebruik =+enginenaam, anders regex.
+					'name' => '=Trident', //If the engine is known or always the same, you can use an = (equal) sign followed by the name, to skip the usage of regex.
 					'version' => '/\sTrident\/([0-9\.]+)(;|\s|)/i'
 				)
 			),
@@ -131,9 +132,11 @@
 				)
 			)
 		);
-
+		
+		//This function calls the initialisation methods and created empty objects to be filled.
 		public static function init() {
-			//Alle lege objecten worden hier geset, voor gebruik en invulling.
+	
+			//Benchmarking
 			self::$Execution = new Stdclass;
 			self::$Execution->Time = new Stdclass();
 			self::$Execution->Memory = new Stdclass();
@@ -146,44 +149,47 @@
 			self::$Browser->Encoding = new Stdclass;
 			self::$Browser->ChromeFrame = new Stdclass;
 			self::$System = new Stdclass;
-			//Haal useragentstring op, of set deze in de functie (voor tests)
+			//getUserAgent(); function can take any useragent between the brackets to test regexes etc.
 			self::getUserAgent();
+			//Here we do the actual information gathering which will fill the objects.
 			self::setInfo();
 
-			//Benchmark, end + opslaan variabelen.
+			//Benchmark, end.
 			self::setExecutionEnd();
 		}
 
+		//Check if browser checks encoding.
 		public static function acceptsEncoding($mtd = 'gzip') {
 			return in_array($mtd, self::$Browser->Encoding->Options) ? true : false;
 		}
 
-		//Lock instance (static class)
+		//Cloning this class is quite useless as well as constructing it.
+		//Static classes are slightly faster since they are only initialized once.
 		protected function __construct() {}
 		protected function __clone() {}
 
 		protected static function getUserAgent($userAgent = null) {
-			$pattern = '/Mozilla\/[0-9\.]+(\s|)/'; //Stript legacy mozilla + version tag (nutteloos)
+			$pattern = '/Mozilla\/[0-9\.]+(\s|)/'; //Stript legacy mozilla + version tag this has become useless.
 			if ($userAgent === null || strlen($userAgent) === 0)
 				$userAgent = $_SERVER['HTTP_USER_AGENT'];
 			self::$Browser->UserAgent = preg_replace($pattern, '', $userAgent);
 		}
 
 		protected static function setInfo() {
-			//Uitvoer alle functies.
+			//Execute all the functions.
 			self::setCompatibility();
 			self::setBrowserName();
-			self::setAltBrowserName();
+			self::setAltBrowserName(); //This function gets secondary names, e.g. Waterfox as an alternate to Firefox.
 			self::setBrowserVersion();
 			self::setEngineName();
 			self::setEngineVersion();
-			self::setChromeFrame();
+			self::setChromeFrame(); //Checks if ChromeFrame is enabled (deprecated and soon to be removed as it's no longer being developed.)
 			self::setChromeFrameVersion();
 			self::setBrowserEncoding();
 			self::setBrowserLanguage();
-			self::setClientSystem();
+			self::setClientSystem(); //Estimated guess of used OS and architecture (x64 / x32)
 			self::setMobile();
-			self::setHTMLClasses();
+			self::setHTMLClasses(); //Has all the gathered information formatted as classes.
 		}
 
 		protected static function setExecutionStart() {
@@ -387,4 +393,4 @@
 			return $array;
 		}
 	}
-	Client::init(); //Voert class uit, set variabelen. hoeft niet meer aangeroepen te worden.
+	Client::init(); //Initializes itself, you won't have to do this anymore as all the variables will be set.
