@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DexFormHandler, Formhandler object
+ * Client identification class
  *
  * @author Sidney Liebrand <sidney@dexonlineservices.nl>
  * @version 1.0.0
