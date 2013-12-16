@@ -373,16 +373,18 @@
 			self::$Browser->HTMLClasses = preg_replace('/Unknown[a-z0-9]+\s/i', '', strtolower(trim($classStr)));
 		}
 
-		//Hieronder custom functies voor het formatteren van Data binnen deze class.
+		//Gets major version of the browser, until the first dot occurs.
 		protected static function setMajorVersion($fullversion) {
 			preg_match('/([0-9a-zA-Z]+)\./i', $fullversion, $versionArray);
 			return isset($versionArray[1]) ? $versionArray[1] : null;
 		}
 
+		//Returns (bool) true or false if given character is the first in a string.
 		protected static function firstCharIs($char, $string) {
 			return (substr($string, 0, 1) === $char) ? true : false;
 		}
 
+		//Used for the cleaning of duplicates / empty array indexes.
 		protected static function arrayClean($array = null) {
 			if (!is_array($array))
 				return null;
