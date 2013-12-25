@@ -6,7 +6,7 @@
  * @author Sidney Liebrand <sidneyliebrand@gmail.com>
  * @version 1.0.0
  *
- * This class initiates itself, all you have to do is call it's methods e.g. Client::$Browser->Name e.t.c.'
+ * This class initiates itself, all you have to do is call it's properties e.g. Client::$Browser->Name e.t.c.'
  * 
  */
 
